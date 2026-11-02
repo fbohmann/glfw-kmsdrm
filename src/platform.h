@@ -90,6 +90,17 @@
  #define GLFW_GLX_LIBRARY_CONTEXT_STATE
 #endif
 
+#if defined(_GLFW_KMSDRM)
+#include "kmsdrm_platform.h"
+#define GLFW_EXPOSE_NATIVE_KMSDRM
+#define GLFW_EXPOSE_NATIVE_EGL
+#else
+#define GLFW_KMSDRM_WINDOW_STATE
+#define GLFW_KMSDRM_MONITOR_STATE
+#define GLFW_KMSDRM_CURSOR_STATE
+#define GLFW_KMSDRM_LIBRARY_WINDOW_STATE
+#endif
+
 #include "null_joystick.h"
 
 #if defined(_GLFW_WIN32)
@@ -106,7 +117,7 @@
  #define GLFW_COCOA_LIBRARY_JOYSTICK_STATE
 #endif
 
-#if (defined(_GLFW_X11) || defined(_GLFW_WAYLAND)) && defined(__linux__)
+#if (defined(_GLFW_X11) || defined(_GLFW_WAYLAND) || defined(_GLFW_KMSDRM)) && defined(__linux__)
  #define GLFW_BUILD_LINUX_JOYSTICK
 #endif
 
@@ -122,6 +133,7 @@
         GLFW_COCOA_WINDOW_STATE \
         GLFW_WAYLAND_WINDOW_STATE \
         GLFW_X11_WINDOW_STATE \
+        GLFW_KMSDRM_WINDOW_STATE \
         GLFW_NULL_WINDOW_STATE \
 
 #define GLFW_PLATFORM_MONITOR_STATE \
@@ -129,6 +141,7 @@
         GLFW_COCOA_MONITOR_STATE \
         GLFW_WAYLAND_MONITOR_STATE \
         GLFW_X11_MONITOR_STATE \
+        GLFW_KMSDRM_MONITOR_STATE \
         GLFW_NULL_MONITOR_STATE \
 
 #define GLFW_PLATFORM_CURSOR_STATE \
@@ -136,6 +149,7 @@
         GLFW_COCOA_CURSOR_STATE \
         GLFW_WAYLAND_CURSOR_STATE \
         GLFW_X11_CURSOR_STATE \
+        GLFW_KMSDRM_CURSOR_STATE \
         GLFW_NULL_CURSOR_STATE \
 
 #define GLFW_PLATFORM_JOYSTICK_STATE \
@@ -148,6 +162,7 @@
         GLFW_COCOA_LIBRARY_WINDOW_STATE \
         GLFW_WAYLAND_LIBRARY_WINDOW_STATE \
         GLFW_X11_LIBRARY_WINDOW_STATE \
+        GLFW_KMSDRM_LIBRARY_WINDOW_STATE \
         GLFW_NULL_LIBRARY_WINDOW_STATE \
 
 #define GLFW_PLATFORM_LIBRARY_JOYSTICK_STATE \
@@ -206,7 +221,7 @@
  #define GLFW_BUILD_POSIX_MODULE
 #endif
 
-#if defined(_GLFW_WAYLAND) || defined(_GLFW_X11)
+#if defined(_GLFW_WAYLAND) || defined(_GLFW_X11) || defined(_GLFW_KMSDRM)
  #include "posix_poll.h"
  #define GLFW_BUILD_POSIX_POLL
 #endif

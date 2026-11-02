@@ -577,8 +577,11 @@ GLFWbool _glfwRefreshContextAttribs(_GLFWwindow* window,
             window->context.getProcAddress("glClear");
         glClear(GL_COLOR_BUFFER_BIT);
 
-        if (window->doublebuffer)
-            window->context.swapBuffers(window);
+        // TODO: why does this have to be here? investigate!
+        if ((_glfw.platform.platformID == GLFW_PLATFORM_WAYLAND) || (_glfw.platform.platformID == GLFW_PLATFORM_X11)) {
+            if (window->doublebuffer)
+                window->context.swapBuffers(window);
+        }
     }
 
     glfwMakeContextCurrent((GLFWwindow*) previous);

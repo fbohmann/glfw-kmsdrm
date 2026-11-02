@@ -57,7 +57,17 @@ if (GLFW_BUILD_WAYLAND)
                                 wl_monitor.c wl_window.c)
 endif()
 
-if (GLFW_BUILD_X11 OR GLFW_BUILD_WAYLAND)
+if (GLFW_BUILD_KMSDRM)
+    link_libraries(gbm)
+    link_libraries(drm)
+    target_compile_definitions(glfw PRIVATE _GLFW_KMSDRM)
+    target_sources(glfw PRIVATE kmsdrm_init.c kmsdrm_platform.h
+                                kmsdrm_monitor.c kmsdrm_window.c)
+    target_include_directories(glfw PRIVATE "/usr/include/libdrm")
+
+endif()
+
+if (GLFW_BUILD_X11 OR GLFW_BUILD_WAYLAND OR GLFW_BUILD_KMSDRM)
     if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
         target_sources(glfw PRIVATE linux_joystick.h linux_joystick.c)
     endif()

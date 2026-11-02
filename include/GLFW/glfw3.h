@@ -1347,6 +1347,7 @@ extern "C" {
 /* Reserved platform define for external Emscripten ports: 0x00060006
  * See https://github.com/pongasoft/emscripten-glfw
  */
+#define GLFW_PLATFORM_KMSDRM        0x00060007
 
 #define GLFW_DONT_CARE              -1
 

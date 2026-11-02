@@ -278,6 +278,16 @@ static void makeContextCurrentEGL(_GLFWwindow* window)
     _glfwPlatformSetTls(&_glfw.contextSlot, window);
 }
 
+#ifdef _GLFW_KMSDRM
+static void page_flip_handler(int fd, unsigned int frame, unsigned int sec, unsigned int usec, void* data) {
+    /* suppress 'unused parameter' warnings */
+    (void) fd, (void) frame, (void) sec, (void) usec;
+
+    int* waiting_for_flip = data;
+    *waiting_for_flip = 0;
+}
+#endif
+
 static void swapBuffersEGL(_GLFWwindow* window)
 {
     if (window != _glfwPlatformGetTls(&_glfw.contextSlot))
@@ -305,7 +315,77 @@ static void swapBuffersEGL(_GLFWwindow* window)
     }
 #endif
 
-    eglSwapBuffers(_glfw.egl.display, window->context.egl.surface);
+#ifdef _GLFW_KMSDRM
+    if (_glfw.platform.platformID == GLFW_PLATFORM_KMSDRM) {
+    fd_set fds;
+    drmEventContext evctx = {
+            .version = 2,
+            .page_flip_handler = page_flip_handler,
+    };
+    struct gbm_bo* next_bo;
+    int waiting_for_flip = 1;
+    int ret;
+
+    if (_glfw.kmsdrm.gbm.surface) {
+        // debug_printf("%d swapBufferEGL: eglSwapBuffers egl.display=%p egl.surface=%p\n", count_open_files(), _glfw.egl.display, window->context.egl.surface);
+        if (!eglSwapBuffers(_glfw.egl.display, window->context.egl.surface)) {
+            _glfwInputError(GLFW_PLATFORM_ERROR, "swapBufferEGL: eglSwapBuffers error.");
+            return;
+        }
+        // debug_printf("%d swapBufferEGL: gbm_surface_lock_front_buffer gbm.surface=%p\n", count_open_files(), _glfw.kmsdrm.gbm.surface);
+        next_bo = gbm_surface_lock_front_buffer(_glfw.kmsdrm.gbm.surface);
+        if (!next_bo) {
+            _glfwInputError(GLFW_PLATFORM_ERROR, "swapBufferEGL: gbm_surface_lock_front_buffer error.");
+            return;
+        }
+    }
+    // debug_printf("%d swapBufferEGL: drm_fb_get_from_bo next_bo=%p\n", count_open_files(), next_bo);
+    _glfw.kmsdrm.gbm.fb = drm_fb_get_from_bo(next_bo);
+    if (!_glfw.kmsdrm.gbm.fb) {
+        _glfwInputError(GLFW_PLATFORM_ERROR, "swapBufferEGL: Failed to get a new framebuffer BO");
+        return;
+    }
+
+    // Here you could also update drm plane layers if you want hw composition
+    // debug_printf("%d swapBufferEGL: drmModePageFlip drm.fd=%d drm.crtc_id=%d fb.fb_id=%d\n", count_open_files(), _glfw.kmsdrm.drm.fd, _glfw.kmsdrm.drm.crtc_id, _glfw.kmsdrm.gbm.fb->fb_id);
+    ret = drmModePageFlip(_glfw.kmsdrm.drm.fd, _glfw.kmsdrm.drm.crtc_id, _glfw.kmsdrm.gbm.fb->fb_id, DRM_MODE_PAGE_FLIP_EVENT, &waiting_for_flip);
+    if (ret) {
+        _glfwInputError(GLFW_PLATFORM_ERROR, "swapBufferEGL: Failed to queue page flip");
+        return;
+    }
+
+    while (waiting_for_flip) {
+        FD_ZERO(&fds);
+        FD_SET(0, &fds);
+        FD_SET(_glfw.kmsdrm.drm.fd, &fds);
+
+        ret = select(_glfw.kmsdrm.drm.fd + 1, &fds, NULL, NULL, NULL);
+        if (ret < 0) {
+            _glfwInputError(GLFW_PLATFORM_ERROR, "swapBufferEGL: select err: %s", strerror(errno));
+            return;
+        } else if (ret == 0) {
+            _glfwInputError(GLFW_PLATFORM_ERROR, "swapBufferEGL: select timeout!");
+            return;
+        } else if (FD_ISSET(0, &fds) && !_glfw.kmsdrm.drm.nonblocking) {
+            _glfwInputError(GLFW_PLATFORM_ERROR, "swapBufferEGL: user interrupted!");
+            return;
+        }
+        // debug_printf("%d swapBufferEGL: drmHandleEvent drm.fd=%d\n", count_open_files(), _glfw.kmsdrm.drm.fd);
+        drmHandleEvent(_glfw.kmsdrm.drm.fd, &evctx);
+    }
+
+    /* release last buffer to render on again: */
+    if (_glfw.kmsdrm.gbm.surface) {
+        // debug_printf("%d swapBufferEGL: gbm_surface_release_buffer gbm.surface=%p\n", count_open_files(), _glfw.kmsdrm.gbm.surface);
+        gbm_surface_release_buffer(_glfw.kmsdrm.gbm.surface, _glfw.kmsdrm.gbm.bo);
+    }
+    _glfw.kmsdrm.gbm.bo = next_bo;
+    }
+#endif
+
+    if (_glfw.platform.platformID == GLFW_PLATFORM_WAYLAND || _glfw.platform.platformID == GLFW_PLATFORM_X11) {
+        eglSwapBuffers(_glfw.egl.display, window->context.egl.surface);
+    }
 }
 
 static void swapIntervalEGL(int interval)
@@ -495,6 +575,8 @@ GLFWbool _glfwInitEGL(void)
             _glfwStringInExtensionString("EGL_EXT_platform_x11", extensions);
         _glfw.egl.EXT_platform_wayland =
             _glfwStringInExtensionString("EGL_EXT_platform_wayland", extensions);
+        _glfw.egl.EXT_platform_kmsdrm =
+            _glfwStringInExtensionString("EGL_KHR_platform_gbm", extensions) || _glfwStringInExtensionString("EGL_EXT_platform_gbm", extensions);
         _glfw.egl.ANGLE_platform_angle =
             _glfwStringInExtensionString("EGL_ANGLE_platform_angle", extensions);
         _glfw.egl.ANGLE_platform_angle_opengl =
@@ -562,6 +644,9 @@ GLFWbool _glfwInitEGL(void)
         extensionSupportedEGL("EGL_KHR_context_flush_control");
     _glfw.egl.EXT_present_opaque =
         extensionSupportedEGL("EGL_EXT_present_opaque");
+    // TODO: why?
+    //_glfw.egl.EXT_image_dma_buf_import_modifiers =
+    //    extensionSupportedEGL("EGL_EXT_image_dma_buf_import_modifiers");
 
     return GLFW_TRUE;
 }
