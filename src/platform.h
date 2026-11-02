@@ -33,8 +33,18 @@
     defined(GLFW_BUILD_POSIX_MODULE) || \
     defined(GLFW_BUILD_POSIX_THREAD) || \
     defined(GLFW_BUILD_POSIX_POLL) || \
-    defined(GLFW_BUILD_LINUX_JOYSTICK)
+    defined(GLFW_BUILD_LINUX_JOYSTICK) || \
+    defined(GLFW_BUILD_LINUX_KEYBOARD)
+
  #error "You must not define these; define zero or more _GLFW_<platform> macros instead"
+#endif
+
+#ifdef DEBUG
+#define debug_puts puts
+#define debug_printf printf
+#else
+#define debug_puts(x) ((void)0)
+#define debug_printf(...) ((void)0)
 #endif
 
 #include "null_platform.h"
@@ -128,6 +138,17 @@
  #define GLFW_LINUX_LIBRARY_JOYSTICK_STATE
 #endif
 
+#if (defined(_GLFW_KMSDRM)) && defined(__linux__)
+#define GLFW_BUILD_LINUX_KEYBOARD
+#endif
+
+#if defined(GLFW_BUILD_LINUX_KEYBOARD)
+#include "linux_keyboard.h"
+#else
+#define GLFW_LINUX_KEYBOARD_STATE
+#define GLFW_LINUX_LIBRARY_KEYBOARD_STATE
+#endif
+
 #define GLFW_PLATFORM_WINDOW_STATE \
         GLFW_WIN32_WINDOW_STATE \
         GLFW_COCOA_WINDOW_STATE \
@@ -157,6 +178,9 @@
         GLFW_COCOA_JOYSTICK_STATE \
         GLFW_LINUX_JOYSTICK_STATE
 
+#define GLFW_PLATFORM_KEYBOARD_STATE \
+        GLFW_LINUX_KEYBOARD_STATE
+
 #define GLFW_PLATFORM_LIBRARY_WINDOW_STATE \
         GLFW_WIN32_LIBRARY_WINDOW_STATE \
         GLFW_COCOA_LIBRARY_WINDOW_STATE \
@@ -169,6 +193,9 @@
         GLFW_WIN32_LIBRARY_JOYSTICK_STATE \
         GLFW_COCOA_LIBRARY_JOYSTICK_STATE \
         GLFW_LINUX_LIBRARY_JOYSTICK_STATE
+
+#define GLFW_PLATFORM_LIBRARY_KEYBOARD_STATE \
+        GLFW_LINUX_LIBRARY_KEYBOARD_STATE
 
 #define GLFW_PLATFORM_CONTEXT_STATE \
         GLFW_WGL_CONTEXT_STATE \

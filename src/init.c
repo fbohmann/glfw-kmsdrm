@@ -388,6 +388,13 @@ GLFWAPI int glfwInit(void)
     if (_glfw.initialized)
         return GLFW_TRUE;
 
+    // TODO: find out why this is here, probably keyboard input?
+    if (isatty(fileno(stdout))) {
+        setvbuf(stdout, NULL, _IOLBF, 0);  // line-buffered
+    } else {
+        setvbuf(stdout, NULL, _IONBF, 0);  // unbuffered
+    }
+
     memset(&_glfw, 0, sizeof(_glfw));
     _glfw.hints.init = _glfwInitHints;
 

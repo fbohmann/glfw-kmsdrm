@@ -55,7 +55,7 @@ void _glfwGetMonitorWorkareaKMSDRM(_GLFWmonitor* monitor, int* xpos, int* ypos, 
 }
 
 void _glfwFreeMonitorKMSDRM(_GLFWmonitor *monitor){
-    debug_puts("_glfwFreeMonitorKMSDRM not implemented");
+    //debug_puts("_glfwFreeMonitorKMSDRM not implemented");
 }
 #endif
 

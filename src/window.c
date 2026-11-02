@@ -193,13 +193,16 @@ GLFWAPI GLFWwindow* glfwCreateWindow(int width, int height,
 
     _GLFW_REQUIRE_INIT_OR_RETURN(NULL);
 
-    if (width <= 0 || height <= 0)
-    {
-        _glfwInputError(GLFW_INVALID_VALUE,
-                        "Invalid window size %ix%i",
-                        width, height);
+    // TODO: find out why this is here
+    if (_glfw.platform.platformID == GLFW_PLATFORM_WAYLAND || _glfw.platform.platformID == GLFW_PLATFORM_X11) {
+        if (width <= 0 || height <= 0)
+        {
+            _glfwInputError(GLFW_INVALID_VALUE,
+                            "Invalid window size %ix%i",
+                            width, height);
 
-        return NULL;
+            return NULL;
+        }
     }
 
     fbconfig  = _glfw.hints.framebuffer;

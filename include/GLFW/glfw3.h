@@ -610,6 +610,20 @@ extern "C" {
 #define GLFW_JOYSTICK_LAST          GLFW_JOYSTICK_16
 /*! @} */
 
+/*! @defgroup keyboards Keyboards
+*  @brief Keyboard IDs.
+*
+*  See [keyboard input](@ref keyboard) for how these are used.
+*
+*  @ingroup input
+*  @{ */
+#define GLFW_KEYBOARD_1             0
+#define GLFW_KEYBOARD_2             1
+#define GLFW_KEYBOARD_3             2
+#define GLFW_KEYBOARD_4             3
+#define GLFW_KEYBOARD_LAST          GLFW_KEYBOARD_4
+/*! @} */
+
 /*! @defgroup gamepad_buttons Gamepad buttons
  *  @brief Gamepad buttons.
  *

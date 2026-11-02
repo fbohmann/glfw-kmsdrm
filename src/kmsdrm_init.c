@@ -218,7 +218,7 @@ static void drm_fb_destroy_callback(struct gbm_bo* bo, void* data) {
         drmModeRmFB(drm_fd, fb->fb_id);
     }
     free(fb);
-    debug_puts("Cleaning up [OK]");
+    //debug_puts("Cleaning up [OK]");
 }
 
 struct drm_fb* drm_fb_get_from_bo(struct gbm_bo* bo) {
@@ -266,8 +266,8 @@ struct drm_fb* drm_fb_get_from_bo(struct gbm_bo* bo) {
     // }
 
     if (ret) {
-        if (flags)
-            debug_puts("drm_fb_get_from_bo: Modifiers failed!");
+        //if (flags)
+        //    debug_puts("drm_fb_get_from_bo: Modifiers failed!");
 
         memcpy(handles, (uint32_t[4]) { gbm_bo_get_handle(bo).u32, 0, 0, 0 }, 16);
         memcpy(strides, (uint32_t[4]) { gbm_bo_get_stride(bo), 0, 0, 0 }, 16);
@@ -302,7 +302,7 @@ int is_keyboard(const char* device_path) {
     }
 
     // Output the device name for debugging (optional)
-    debug_printf("Device name: %s\n", name);
+    //debug_printf("Device name: %s\n", name);
 
     // Check if the device supports key events (EV_KEY)
     unsigned long evbit[2];  // 2 bits to store capability info
@@ -360,7 +360,7 @@ void _glfwTerminateKMSDRM(void) {
     _glfwTerminateJoysticksLinux();
     if (_glfw.kmsdrm.drm.fd >= 0)
         close(_glfw.kmsdrm.drm.fd);
-    debug_printf("_glfwTerminateKMSDRM: Terminating DRM fd=%d [OK]\n", _glfw.kmsdrm.drm.fd);
+    //debug_printf("_glfwTerminateKMSDRM: Terminating DRM fd=%d [OK]\n", _glfw.kmsdrm.drm.fd);
 }
 
 //////////////////////////////////////////////////////////////////////////
