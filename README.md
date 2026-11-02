@@ -5,7 +5,7 @@
 
 ## Fork information
 
-This Fork exists to merge in the changes from [glfw-plus](https://github.com/leonkasovan/glfw-plus) into the current version of glfw and extend them a little bit to support multiple screens when running from console.
+This fork exists to merge in the changes from [glfw-plus](https://github.com/leonkasovan/glfw-plus) into the current version of glfw and extend them a little bit to support multiple screens when running from console.
 
 ## Introduction
 
